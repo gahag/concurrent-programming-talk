@@ -204,7 +204,7 @@
       let result = child_thread.join();
     #+end_src
 *** Mutex e RwLock
-    Primitivas de *exlcusão mútua*, providas pelo sistema operacional.
+    Primitivas de *exclusão mútua*, providas pelo sistema operacional.
     #+begin_quote
     Lock data, not code.
     #+end_quote
