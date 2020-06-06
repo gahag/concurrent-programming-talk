@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/css/reveal.css"/>
+
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/serif.css" id="theme"/>
+
+<link rel="stylesheet" href="./custom.css"/>
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'http://cdn.jsdelivr.net/reveal.js/3.0.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<section>
+<section id="slide-orgbad3af4">
+<h2 id="orgbad3af4">Programação Concorrente</h2>
+<p style="text-align:center">
+Uma visão geral em Rust
+</p>
+
+<div class="figure">
+<p><object type="image/svg+xml" data="./images/ferris.svg" class="org-svg" width="300px" style="text-align:center">
+Sorry, your browser does not support SVG.</object>
+</p>
+</div>
+<p style="text-align:center">
+Fearless Concurrency
+</p>
+</section>
+<section id="slide-orgba46cba">
+<h3 id="orgba46cba">Motivação</h3>
+<p>
+Nossos programas são lentos e nossos processadores são subutilizados.
+</p>
+<ul>
+<li>Lei de Moore: processadores dobram de velocidade em 2 anos.</li>
+<li>Desde a década passada, a velocidade saturou.</li>
+<li>Processadores modernos ganham desempenho com núcleos.</li>
+<li>Mas, nossos programas são sequenciais.</li>
+
+</ul>
+<br>
+<ul>
+<li>Processadores gastam a maior parte do seu tempo esperando.</li>
+<li>Muitas vezes quando ainda há trabalho a se fazer.</li>
+
+</ul>
+</section>
+<section id="slide-org72990ca">
+<h3 id="org72990ca">Paradigmas</h3>
+
+<div class="figure">
+<p><object type="image/svg+xml" data="./images/concurrency.svg" class="org-svg" width="500px" style="text-align:center">
+Sorry, your browser does not support SVG.</object>
+</p>
+</div>
+<p style="text-align:center">
+Paralelismo é uma forma de concorrência
+</p>
+<ul>
+<li>Concorrência: corrotinas, programação assíncrona.</li>
+<li>Paralelismo: <i>threads</i>, <i>SIMD</i>, programação assíncrona.</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgdded0a7">
+<h2 id="orgdded0a7">Concorrência</h2>
+<p style="text-align:center">
+Fluxo de controle <b>alternante</b>
+</p>
+<ul>
+<li>Corrotinas</li>
+<li>Programação assíncrona</li>
+
+</ul>
+</section>
+<section id="slide-org0981ad2">
+<h3 id="org0981ad2">Corrotinas</h3>
+<p>
+Assim como <i>async</i>, é uma abstração de uma máquina de estados. <br />
+↳ Que pode ser <b>pausada</b> e <b>resumida</b>!
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-python"><span style="color: #223fae;">def</span> <span style="color: #1c2028;">generate_squares</span>():
+<span style="color: #D8DEE9;">  </span><span style="color: #1c2028;">i</span> = 1
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">while</span> <span style="color: #223fae;">True</span>:
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">yield</span> (i * i)
+<span style="color: #D8DEE9;">    </span><span style="color: #1c2028;">i</span> += 1
+
+<span style="color: #1c2028;">generator</span> = generate_squares()
+<span style="color: #223fae;">print</span>(<span style="color: #223fae;">next</span>(generator)) <span style="color: #8b94a5;"># </span><span style="color: #8b94a5;">1</span>
+<span style="color: #223fae;">print</span>(<span style="color: #223fae;">next</span>(generator)) <span style="color: #8b94a5;"># </span><span style="color: #8b94a5;">4</span>
+<span style="color: #223fae;">print</span>(<span style="color: #223fae;">next</span>(generator)) <span style="color: #8b94a5;"># </span><span style="color: #8b94a5;">9</span>
+</pre>
+</div>
+<ul>
+<li>Escrita de geradores em estilo sequencial.</li>
+<li>Modularização de processos intercalados.</li>
+
+</ul>
+</section>
+<section>
+<p>
+Não temos corrotinas nativas, mas <i>async</i> é semelhante.
+</p>
+
+<p>
+Rust adota uma abordagem funcional, utilizando iteradores:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">fn</span> <span style="color: #1c2028;">generate_squares</span>() -&gt; <span style="color: #223fae;">impl</span> <span style="color: #079992;">Iterator</span>&lt;<span style="color: #079992;">Item</span> = <span style="color: #079992;">u32</span>&gt; {
+<span style="color: #D8DEE9;">  </span>(1..)
+<span style="color: #D8DEE9;">    </span>.map(|i| i * i)
+}
+</pre>
+</div>
+<p>
+Mas há <i>crates</i> que permitem a implementação de corrotinas:
+</p>
+<ul>
+<li><a href="https://docs.rs/corona/0.4.3/corona/">corona</a></li>
+<li><a href="https://docs.rs/coroutine/0.8.0/coroutine/">coroutine</a></li>
+
+</ul>
+</section>
+<section id="slide-org9916ca4">
+<h3 id="org9916ca4">Programação assíncrona</h3>
+<p>
+Eficiente para tarefas limitadas por entrada/saída (IO).
+</p>
+<ul>
+<li>Abstração de uma máquina de estados</li>
+<li>Código em estilo sequencial</li>
+<li>Permite execução de forma concorrente ou paralela</li>
+<li><i>Overhead</i> inferior ao de <i>threads</i></li>
+
+</ul>
+</section>
+<section id="slide-orgdeeff99">
+<h4 id="orgdeeff99"><i>Futures</i></h4>
+<p>
+Um <i>future</i> representa uma computação que está em processo, e eventualmente produzirá um
+valor.
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">pub</span> <span style="color: #223fae;">trait</span> <span style="color: #079992;">Future</span> {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">type</span> <span style="color: #079992;">Output</span>;
+
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">fn</span> <span style="color: #1c2028;">poll</span>(<span style="color: #223fae;">self</span>: <span style="color: #079992;">Pin</span>&lt;&amp;<span style="color: #223fae;">mut</span> <span style="color: #079992;">Self</span>&gt;, <span style="color: #1c2028;">cx</span>: &amp;<span style="color: #223fae;">mut</span> <span style="color: #079992;">Context</span>) -&gt; <span style="color: #079992;">Poll</span>&lt;<span style="color: #079992;">Self</span>::<span style="color: #079992;">Output</span>&gt;;
+}
+
+
+<span style="color: #223fae;">pub</span> <span style="color: #223fae;">enum</span> <span style="color: #079992;">Poll</span>&lt;<span style="color: #079992;">T</span>&gt; {
+<span style="color: #D8DEE9;">    </span><span style="color: #079992;">Ready</span>(<span style="color: #079992;">T</span>),
+<span style="color: #D8DEE9;">    </span><span style="color: #079992;">Pending</span>,
+}
+</pre>
+</div>
+<p>
+Para escrever código assíncrono, não precisamos utilizar o método <code>poll</code>, mas é
+importante ter uma noção de como funciona por baixo dos panos.
+</p>
+</section>
+<section id="slide-org1fe3223">
+<h4 id="org1fe3223">Async/await</h4>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">futures</span>::future;
+
+<span style="color: #223fae;">async</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">download</span>(<span style="color: #1c2028;">url</span>: &amp;<span style="color: #079992;">str</span>) -&gt; <span style="color: #079992;">Result</span>&lt;(), <span style="color: #223fae;">std</span>::<span style="color: #223fae;">io</span>::<span style="color: #079992;">Error</span>&gt;;
+
+<span style="color: #223fae;">async</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">download_files</span>(<span style="color: #1c2028;">file1</span>: &amp;<span style="color: #079992;">str</span>, <span style="color: #1c2028;">file2</span>: &amp;<span style="color: #079992;">str</span>) {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">download1</span> = download(file1);
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">download2</span> = download(file2);
+
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">let</span> (result1, result2) = <span style="color: #223fae;">future</span>::join(download1, download2).<span style="color: #223fae;">await</span>;
+
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">if</span> <span style="color: #223fae;">let</span> <span style="color: #079992;">Err</span>(error) = result1 {
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">eprintln!</span>(<span style="color: #1c2028; font-weight: bold;">"erro: </span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, error);
+<span style="color: #D8DEE9;">  </span>}
+
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">if</span> <span style="color: #223fae;">let</span> <span style="color: #079992;">Err</span>(error) = result2 {
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">eprintln!</span>(<span style="color: #1c2028; font-weight: bold;">"erro: </span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, error);
+<span style="color: #D8DEE9;">  </span>}
+}
+</pre>
+</div>
+</section>
+<section id="slide-orgfad9a65">
+<h4 id="orgfad9a65">Executor</h4>
+<p>
+O executor é o responsável por gerenciar a execução das futures.
+</p>
+
+<p>
+Na prática, a maioria das crates implementam executores em uma e várias <i>threads.</i>
+</p>
+<ul>
+<li><a href="https://docs.rs/futures/0.3.5/futures/">futures</a></li>
+<li><a href="https://docs.rs/tokio/0.2.21/tokio/">tokio</a></li>
+<li><a href="https://docs.rs/async-std/1.6.0/async_std/">async-std</a></li>
+<li><a href="https://docs.rs/executors/0.6.0/executors/">executors</a></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgfea7e41">
+<h2 id="orgfea7e41">Paralelismo</h2>
+<p style="text-align:center">
+Múltiplos controles de fluxo <b>simultâneos</b>
+</p>
+<ul>
+<li><i>Threading</i></li>
+<li><i>SIMD</i></li>
+
+</ul>
+</section>
+<section id="slide-org1ae155d">
+<h3 id="org1ae155d"><i>Threading</i></h3>
+<p>
+Controle de fluxo paralelo no mesmo espaço de endereçamento.
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">static</span> <span style="color: #1c2028;">slice</span>: &amp;[<span style="color: #079992;">u8</span>] = &amp;[ 1, 2, 3 ];
+
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">child_thread</span> = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
+<span style="color: #D8DEE9;">    </span>|| {
+<span style="color: #D8DEE9;">        </span><span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">some work here</span>
+<span style="color: #D8DEE9;">        </span><span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, slice[0]);
+<span style="color: #D8DEE9;">    </span>}
+);
+
+<span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, slice[1]);
+
+<span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">some work here</span>
+
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">result</span> = child_thread.join();
+</pre>
+</div>
+<p>
+Eficiente para tarefas limitadas pelo processador.
+</p>
+</section>
+<section id="slide-org8e139c2">
+<h3 id="org8e139c2">Memória compartilhada</h3>
+<p>
+Múltiplas <i>threads</i> acessando os mesmos dados.
+</p>
+<ul>
+<li>Um tipo <code>T</code> é <i>Send</i> se ele pode ser <b>enviado</b> para outra <i>thread</i>.</li>
+<li>Um tipo <code>T</code> é <i>Sync</i> se ele pode ser <b>compartilhado</b> entre <i>threads</i>.
+↳ Ou seja: <code>&amp;T</code> é <i>Send</i>.</li>
+
+</ul>
+
+<p>
+A maioria dos tipos é <i>Send</i>, exceto <code>std::rc::Rc</code> e similares.
+</p>
+
+<p>
+A maioria dos tipos também é <i>Sync</i>, com exceção daqueles que permitem <b>mutabilidade
+interior não sincronizada</b>.
+</p>
+
+<p>
+Rust inibe corrida de dados, mas não todas condições de corrida.
+</p>
+</section>
+<section id="slide-orge06b3a6">
+<h4 id="orge06b3a6">Atômicos</h4>
+<p>
+Processadores modernos possuem instruções atômicas.
+</p>
+<ul>
+<li>Em Rust, temos tipos de dados atômicos.</li>
+<li>Tais tipos permitem <b>mutabilidade interior sincronizada</b>.</li>
+
+</ul>
+<br>
+<p>
+Na biblioteca padrão:
+</p>
+<ul>
+<li>std::sync::atomic
+<ul>
+<li>AtomicUsize</li>
+<li>AtomicI32</li>
+<li>AtomicBool</li>
+<li>&#x2026;</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section>
+<p>
+Operações (<code>AtomicUsize</code>):
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">load</span>(&amp;<span style="color: #223fae;">self</span>, <span style="color: #1c2028;">order</span>: <span style="color: #079992;">Ordering</span>) -&gt; <span style="color: #079992;">usize</span>;
+<span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">store</span>(&amp;<span style="color: #223fae;">self</span>, <span style="color: #1c2028;">val</span>: <span style="color: #079992;">usize</span>, <span style="color: #1c2028;">order</span>: <span style="color: #079992;">Ordering</span>);
+...
+</pre>
+</div>
+<p>
+Apesar da aparente simplicidade, o modelo de memória é bastante complicado:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">pub</span> <span style="color: #223fae;">enum</span> <span style="color: #079992;">Ordering</span> {
+<span style="color: #D8DEE9;">    </span><span style="color: #079992;">Relaxed</span>,
+<span style="color: #D8DEE9;">    </span><span style="color: #079992;">Release</span>,
+<span style="color: #D8DEE9;">    </span><span style="color: #079992;">Acquire</span>,
+<span style="color: #D8DEE9;">    </span><span style="color: #079992;">AcqRel</span>,
+<span style="color: #D8DEE9;">    </span><span style="color: #079992;">SeqCst</span>,
+}
+</pre>
+</div>
+</section>
+<section id="slide-orgfa5c448">
+<h4 id="orgfa5c448">Arc</h4>
+<p>
+<i>Atomically Reference Counted</i> permite <b>posse compartilhada</b>:
+Gerência de posse entre <i>threads</i> independentes.
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">std</span>::<span style="color: #223fae;">sync</span>::<span style="color: #079992;">Arc</span>;
+
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">vec</span> = <span style="color: #079992;">Arc</span>::new(<span style="color: #223fae; font-weight: bold;">vec!</span>[ 1, 2, 3 ]);
+
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">my_vec</span> = vec.clone();
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">child_thread</span> = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">move</span> || {
+<span style="color: #D8DEE9;">        </span><span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">some work here</span>
+<span style="color: #D8DEE9;">        </span><span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, my_vec[0]);
+<span style="color: #D8DEE9;">    </span>}
+);
+
+<span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, vec[1]);
+
+<span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">some work here</span>
+
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">result</span> = child_thread.join();
+</pre>
+</div>
+</section>
+<section id="slide-orgc15de04">
+<h4 id="orgc15de04">Mutex e RwLock</h4>
+<p>
+Primitivas de <b>exlcusão mútua</b>, providas pelo sistema operacional.
+</p>
+<blockquote>
+<p>
+Lock data, not code.
+</p>
+</blockquote>
+<p>
+Garantem que o acessos concorrentes aos dados não aconteçam.
+</p>
+</section>
+<section>
+<p style="text-align:center">
+Mutex
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">std</span>::<span style="color: #223fae;">sync</span>::{<span style="color: #079992;">Arc</span>, <span style="color: #079992;">Mutex</span>};
+
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">mutex</span> = <span style="color: #079992;">Arc</span>::new(<span style="color: #079992;">Mutex</span>::new(0));
+
+<span style="color: #223fae;">let</span> <span style="color: #223fae;">mut</span> <span style="color: #1c2028;">child_threads</span> = <span style="color: #079992;">Vec</span>::new();
+
+<span style="color: #223fae;">for</span> <span style="color: #1c2028;">_</span> <span style="color: #223fae;">in</span> 0..10 {
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">mutex</span> = mutex.clone();
+
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">handle</span> = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
+<span style="color: #D8DEE9;">        </span><span style="color: #223fae;">move</span> || {
+<span style="color: #D8DEE9;">            </span><span style="color: #223fae;">let</span> <span style="color: #223fae;">mut</span> <span style="color: #1c2028;">data</span> = mutex.lock().unwrap();
+<span style="color: #D8DEE9;">            </span>*data += 1;
+<span style="color: #D8DEE9;">        </span>}
+<span style="color: #D8DEE9;">    </span>);
+
+<span style="color: #D8DEE9;">    </span>child_threads.push(handle);
+}
+
+<span style="color: #223fae;">for</span> <span style="color: #1c2028;">handle</span> <span style="color: #223fae;">in</span> child_threads {
+<span style="color: #D8DEE9;">    </span>handle.join().unwrap();
+}
+
+<span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, mutex.lock().unwrap());
+</pre>
+</div>
+</section>
+<section>
+<p style="text-align:center">
+RwLock
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">std</span>::<span style="color: #223fae;">sync</span>::{<span style="color: #079992;">Arc</span>, <span style="color: #079992;">RwLock</span>};
+
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">rwlock</span> = <span style="color: #079992;">Arc</span>::new(<span style="color: #079992;">RwLock</span>::new(0));
+
+<span style="color: #223fae;">for</span> <span style="color: #1c2028;">_</span> <span style="color: #223fae;">in</span> 0..5 {
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">data_handle</span> = rwlock.clone();
+
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
+<span style="color: #D8DEE9;">        </span><span style="color: #223fae;">move</span> || {
+<span style="color: #D8DEE9;">            </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">data</span> = data_handle.read().unwrap();
+<span style="color: #D8DEE9;">            </span><span style="color: #223fae;">print!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;"> "</span>, data)
+<span style="color: #D8DEE9;">        </span>}
+<span style="color: #D8DEE9;">    </span>);
+
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">data_handle</span> = rwlock.clone();
+
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
+<span style="color: #D8DEE9;">        </span><span style="color: #223fae;">move</span> || {
+<span style="color: #D8DEE9;">            </span><span style="color: #223fae;">let</span> <span style="color: #223fae;">mut</span> <span style="color: #1c2028;">data</span> = data_handle.write().unwrap();
+<span style="color: #D8DEE9;">            </span>*data += 1;
+<span style="color: #D8DEE9;">        </span>}
+<span style="color: #D8DEE9;">    </span>);
+}
+</pre>
+</div>
+</section>
+<section>
+<p>
+Há uma condição de corrida: (<b>!</b>)
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">Execução</td>
+<td class="org-left">Resultado</td>
+</tr>
+
+<tr>
+<td class="org-right">1</td>
+<td class="org-left">0 1 1 1 1</td>
+</tr>
+
+<tr>
+<td class="org-right">2</td>
+<td class="org-left">0 2 2 3 4</td>
+</tr>
+
+<tr>
+<td class="org-right">3</td>
+<td class="org-left">0 1 1 1 2</td>
+</tr>
+
+<tr>
+<td class="org-right">4</td>
+<td class="org-left">0 0 1 2 4</td>
+</tr>
+</tbody>
+</table>
+<p>
+Mas não é uma corrida de dados.
+</p>
+
+<div class="figure">
+<p><img src="./images/data-race.png" alt="data-race.png" width="200px" style="text-align:center" />
+</p>
+</div>
+</section>
+<section id="slide-org305301f">
+<h3 id="org305301f">Passagem de mensagens</h3>
+<p>
+Canais de comunicação, onde se envia e recebe dados.
+</p>
+
+<p>
+<code>std::sync::mpsc</code>
+</p>
+
+<p>
+O canal abstrai uma fila de mensagens.
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">channel</span>&lt;<span style="color: #079992;">T</span>&gt;() -&gt; (<span style="color: #079992;">Sender</span>&lt;<span style="color: #079992;">T</span>&gt;, <span style="color: #079992;">Receiver</span>&lt;<span style="color: #079992;">T</span>&gt;);
+
+<span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">sync_channel</span>&lt;<span style="color: #079992;">T</span>&gt;(<span style="color: #1c2028;">bound</span>: <span style="color: #079992;">usize</span>) -&gt; (<span style="color: #079992;">SyncSender</span>&lt;<span style="color: #079992;">T</span>&gt;, <span style="color: #079992;">Receiver</span>&lt;<span style="color: #079992;">T</span>&gt;)
+</pre>
+</div>
+<p>
+Há <i>crates</i> que implementam variantes mais elaboradas.
+</p>
+</section>
+<section>
+<p>
+Tipicamente utilizado para comunicação entre threads:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">let</span> (tx, rx) = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">sync</span>::<span style="color: #223fae;">mpsc</span>::channel();
+
+<span style="color: #223fae;">for</span> <span style="color: #1c2028;">i</span> <span style="color: #223fae;">in</span> 0..10 {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">tx</span> = tx.clone();
+
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">move</span> || {
+<span style="color: #D8DEE9;">      </span>tx.send(i).unwrap();
+<span style="color: #D8DEE9;">    </span>}
+<span style="color: #D8DEE9;">  </span>);
+}
+
+<span style="color: #223fae;">for</span> <span style="color: #1c2028;">_</span> <span style="color: #223fae;">in</span> 0..10 {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">j</span> = rx.recv().unwrap();
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, j);
+}
+</pre>
+</div>
+<p>
+O canal abstrai a gerência de posse dos dados.
+</p>
+</section>
+<section id="slide-org6b3851b">
+<h3 id="org6b3851b"><i>SIMD</i></h3>
+<p>
+Processadores modernos possuem instruções para dados agregados:
+</p>
+
+<div class="figure">
+<p><object type="image/svg+xml" data="./images/simd.svg" class="org-svg" width="500px" style="text-align:center">
+Sorry, your browser does not support SVG.</object>
+</p>
+</div>
+<p style="text-align:center">
+<i>Single Instruction, Multiple Data</i>
+</p>
+
+<p>
+Eficientes para tarefas que operam em blocos de dados compactos e uniformes.
+</p>
+</section>
+<section>
+<p>
+O compilador é capaz de gerar código <i>SIMD</i>:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">fn</span> <span style="color: #1c2028;">sum_into</span>(<span style="color: #1c2028;">a</span>: &amp;[<span style="color: #079992;">f32</span>; 64], <span style="color: #1c2028;">b</span>: &amp;[<span style="color: #079992;">f32</span>; 64], <span style="color: #1c2028;">c</span>: &amp;<span style="color: #223fae;">mut</span> [<span style="color: #079992;">f32</span>; 64]) {
+<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">for</span> <span style="color: #1c2028;">i</span> <span style="color: #223fae;">in</span> 0..64 {
+<span style="color: #D8DEE9;">        </span>c[i] = a[i] + b[i];
+<span style="color: #D8DEE9;">    </span>}
+}
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre  class="src src-asm">...
+<span style="color: #1c2028;">movups</span>  <span style="color: #223fae;">xmm0</span>, xmmword ptr [rdi]
+<span style="color: #1c2028;">movups</span>  <span style="color: #223fae;">xmm1</span>, xmmword ptr [rsi]
+<span style="color: #1c2028;">addps</span>   <span style="color: #223fae;">xmm1</span>, xmm0
+<span style="color: #1c2028;">movups</span>  <span style="color: #223fae;">xmmword</span> ptr [rdx], xmm1
+<span style="color: #1c2028;">movups</span>  <span style="color: #223fae;">xmm0</span>, xmmword ptr [rdi + 16]
+<span style="color: #1c2028;">movups</span>  <span style="color: #223fae;">xmm1</span>, xmmword ptr [rsi + 16]
+...
+</pre>
+</div>
+<p>
+Mas nem sempre ele é esperto o suficiente.
+</p>
+</section>
+<section>
+<p>
+Algumas <i>crates</i> ajudam a utilizar <i>SIMD</i> de forma explícita:
+</p>
+<ul>
+<li><a href="https://docs.rs/faster/0.5.0/faster/">faster</a></li>
+<li><a href="https://docs.rs/simd/0.2.4/simd/">simd</a></li>
+<li><a href="https://docs.rs/packed_simd/0.3.3/packed_simd/">packed-simd</a></li>
+
+</ul>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">let</span> <span style="color: #1c2028;">array_of_10s</span> = [-10; 3000]
+<span style="color: #D8DEE9;">    </span>.simd_iter(i8s(0))
+<span style="color: #D8DEE9;">    </span>.simd_map(|v| v.abs())
+<span style="color: #D8DEE9;">    </span>.scalar_collect();
+</pre>
+</div>
+</section>
+</section>
+<section>
+<section id="slide-org6656cb2">
+<h2 id="org6656cb2">Abstrações</h2>
+<dl>
+<dt><a href="https://docs.rs/rayon/1.3.0/rayon/">Rayon</a></dt><dd><p>
+Paralelismo de dados com <i>threads</i>
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">rayon</span>::<span style="color: #223fae;">prelude</span>::*;
+
+<span style="color: #223fae;">fn</span> <span style="color: #1c2028;">sum_of_squares</span>(<span style="color: #1c2028;">input</span>: &amp;[<span style="color: #079992;">i32</span>]) -&gt; <span style="color: #079992;">i32</span> {
+<span style="color: #D8DEE9;">  </span>input.par_iter() <span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">&lt;-- just change that!</span>
+<span style="color: #D8DEE9;">    </span>.map(|&amp;i| i * i)
+<span style="color: #D8DEE9;">    </span>.sum()
+}
+</pre>
+</div></dd>
+
+</dl>
+</section>
+<section>
+<dl>
+<dt><a href="https://docs.rs/parallel-stream/2.1.1/parallel_stream/">Parallel stream</a></dt><dd>Paralelismo de dados com <i>async</i></dd>
+<dt><a href="https://docs.rs/crossbeam/0.7.3/crossbeam/">Crossbeam</a></dt><dd>Ferramentas genéricas para programação concorrente</dd>
+
+</dl>
+</section>
+</section>
+<section>
+<section id="slide-org3098fc8">
+<h2 id="org3098fc8">Fim</h2>
+<p style="text-align:center">
+<a href="https://github.com/gahag/concurrent-programming-talk" style="text-align:center">https://github.com/gahag/concurrent-programming-talk</a>
+</p>
+</section>
+</section>
+</div>
+</div>
+<script src="http://cdn.jsdelivr.net/reveal.js/3.0.0/lib/js/head.min.js"></script>
+<script src="http://cdn.jsdelivr.net/reveal.js/3.0.0/js/reveal.js"></script>
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+
+controls: true,
+progress: true,
+history: false,
+center: true,
+slideNumber: 'c',
+rollingLinks: false,
+keyboard: true,
+mouseWheel: false,
+fragmentInURL: false,
+hashOneBasedIndex: false,
+pdfSeparateFragments: true,
+
+overview: true,
+
+theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+transition: Reveal.getQueryHash().transition || 'fade', // see README of reveal.js for options
+transitionSpeed: 'default',
+
+// Optional libraries used to extend reveal.js
+dependencies: [
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } }]
+
+});
+</script>
+</body>
+</html>

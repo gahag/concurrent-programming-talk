@@ -1,0 +1,37 @@
+.reveal p { /* text */
+  text-align: left;
+}
+
+.reveal ul, .reveal dl { /* lists */
+  display: block;
+}
+
+.reveal dd {
+  margin-bottom: 10px;
+}
+
+.figure p { /* images */
+  text-align: center;
+}
+
+pre.src, pre.example {
+  padding: 10px;
+}
+
+code {
+  font-size: 30px !important;
+}
+
+img {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+pre.src {
+  box-shadow: none;
+}
+
+::selection {
+  background-color: #b0deff;
+  color: black;
+}
