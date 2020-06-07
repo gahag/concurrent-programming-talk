@@ -27,8 +27,8 @@
 <div class="slides">
 
 <section>
-<section id="slide-orgd7804b3">
-<h2 id="orgd7804b3">Programação Concorrente</h2>
+<section id="slide-orga75d68a">
+<h2 id="orga75d68a">Programação Concorrente</h2>
 <p style="text-align:center">
 Uma visão geral em Rust
 </p>
@@ -42,8 +42,8 @@ Sorry, your browser does not support SVG.</object>
 Fearless Concurrency
 </p>
 </section>
-<section id="slide-orgc031bb9">
-<h3 id="orgc031bb9">Motivação</h3>
+<section id="slide-org66e8bde">
+<h3 id="org66e8bde">Motivação</h3>
 <p>
 Nossos programas são lentos e nossos processadores são subutilizados.
 </p>
@@ -61,8 +61,8 @@ Nossos programas são lentos e nossos processadores são subutilizados.
 
 </ul>
 </section>
-<section id="slide-orgbaa3adf">
-<h3 id="orgbaa3adf">Paradigmas</h3>
+<section id="slide-org7f75895">
+<h3 id="org7f75895">Paradigmas</h3>
 
 <div class="figure">
 <p><object type="image/svg+xml" data="./images/concurrency.svg" class="org-svg" width="500px" style="text-align:center">
@@ -80,8 +80,8 @@ Paralelismo é uma forma de concorrência
 </section>
 </section>
 <section>
-<section id="slide-org0fff0bd">
-<h2 id="org0fff0bd">Concorrência</h2>
+<section id="slide-org80e6e2e">
+<h2 id="org80e6e2e">Concorrência</h2>
 <p style="text-align:center">
 Fluxo de controle <b>alternante</b>
 </p>
@@ -91,8 +91,8 @@ Fluxo de controle <b>alternante</b>
 
 </ul>
 </section>
-<section id="slide-org3421046">
-<h3 id="org3421046">Corrotinas</h3>
+<section id="slide-org66139ec">
+<h3 id="org66139ec">Corrotinas</h3>
 <p>
 Assim como <i>async</i>, é uma abstração de uma máquina de estados. <br />
 ↳ Que pode ser <b>pausada</b> e <b>resumida</b>!
@@ -142,8 +142,8 @@ Mas há <i>crates</i> que permitem a implementação de corrotinas:
 
 </ul>
 </section>
-<section id="slide-org761b5b1">
-<h3 id="org761b5b1">Programação assíncrona</h3>
+<section id="slide-org5a32b86">
+<h3 id="org5a32b86">Programação assíncrona</h3>
 <p>
 Eficiente para tarefas limitadas por entrada/saída (IO).
 </p>
@@ -155,8 +155,8 @@ Eficiente para tarefas limitadas por entrada/saída (IO).
 
 </ul>
 </section>
-<section id="slide-orga02675e">
-<h4 id="orga02675e"><i>Futures</i></h4>
+<section id="slide-orgd09b206">
+<h4 id="orgd09b206"><i>Futures</i></h4>
 <p>
 Um <i>future</i> representa uma computação que está em processo, e eventualmente produzirá um
 valor.
@@ -181,8 +181,37 @@ Para escrever código assíncrono, não precisamos utilizar o método <code>poll
 importante ter uma noção de como funciona por baixo dos panos.
 </p>
 </section>
-<section id="slide-orgf447afb">
-<h4 id="orgf447afb">Async/await</h4>
+<section id="slide-orgbcadd88">
+<h4 id="orgbcadd88">Async/await</h4>
+<p>
+A definição de uma função assíncrona se dá da seguinte forma:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">async</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">foo</span>() -&gt; <span style="color: #079992;">i32</span>;
+</pre>
+</div>
+<p>
+Que equivalente a:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">fn</span> <span style="color: #1c2028;">foo</span>() -&gt; <span style="color: #223fae;">impl</span> <span style="color: #079992;">Future</span>&lt;<span style="color: #079992;">Output</span> = <span style="color: #079992;">i32</span>&gt;;
+</pre>
+</div>
+<p>
+Mas nos permite utilizar <code>await</code> na sua implementação.
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">async</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">bar</span>() {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">value</span> = foo().<span style="color: #223fae;">await</span>;
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, value);
+}
+</pre>
+</div>
+</section>
+<section>
 <div class="org-src-container">
 
 <pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">futures</span>::future;
@@ -206,8 +235,8 @@ importante ter uma noção de como funciona por baixo dos panos.
 </pre>
 </div>
 </section>
-<section id="slide-orga216cc8">
-<h4 id="orga216cc8">Executor</h4>
+<section id="slide-org012517a">
+<h4 id="org012517a">Executor</h4>
 <p>
 O executor é o responsável por gerenciar a execução das futures.
 </p>
@@ -225,8 +254,8 @@ Na prática, a maioria das crates implementam executores em uma e várias <i>thr
 </section>
 </section>
 <section>
-<section id="slide-org11fbec5">
-<h2 id="org11fbec5">Paralelismo</h2>
+<section id="slide-org1c6fcbe">
+<h2 id="org1c6fcbe">Paralelismo</h2>
 <p style="text-align:center">
 Múltiplos controles de fluxo <b>simultâneos</b>
 </p>
@@ -236,16 +265,34 @@ Múltiplos controles de fluxo <b>simultâneos</b>
 
 </ul>
 </section>
-<section id="slide-org237bedf">
-<h3 id="org237bedf"><i>Threading</i></h3>
+<section id="slide-orgb57f83a">
+<h3 id="orgb57f83a"><i>Threading</i></h3>
 <p>
 Controle de fluxo paralelo no mesmo espaço de endereçamento.
 </p>
+
+<p>
+<code>std::thread</code>
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">spawn</span>&lt;<span style="color: #079992;">F</span>, <span style="color: #079992;">T</span>&gt;(<span style="color: #1c2028;">f</span>: <span style="color: #079992;">F</span>) -&gt; <span style="color: #079992;">JoinHandle</span>&lt;<span style="color: #079992;">T</span>&gt;
+<span style="color: #223fae;">where</span>
+<span style="color: #D8DEE9;">    </span><span style="color: #1c2028;">F</span>: <span style="color: #079992;">FnOnce</span>() -&gt; <span style="color: #079992;">T</span>,
+<span style="color: #D8DEE9;">    </span><span style="color: #1c2028;">F</span>: <span style="color: #079992;">Send</span> + '<span style="color: #223fae;">static</span>,
+<span style="color: #D8DEE9;">    </span><span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span> + '<span style="color: #223fae;">static</span>,
+</pre>
+</div>
+<p>
+Eficiente para tarefas limitadas pelo processador.
+</p>
+</section>
+<section>
 <div class="org-src-container">
 
 <pre  class="src src-rust"><span style="color: #223fae;">static</span> <span style="color: #1c2028;">slice</span>: &amp;[<span style="color: #079992;">u8</span>] = &amp;[ 1, 2, 3 ];
 
-<span style="color: #223fae;">let</span> <span style="color: #1c2028;">child_thread</span> = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">join_handle</span> = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
 <span style="color: #D8DEE9;">    </span>|| {
 <span style="color: #D8DEE9;">        </span><span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">some work here</span>
 <span style="color: #D8DEE9;">        </span><span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, slice[0]);
@@ -256,15 +303,12 @@ Controle de fluxo paralelo no mesmo espaço de endereçamento.
 
 <span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">some work here</span>
 
-<span style="color: #223fae;">let</span> <span style="color: #1c2028;">result</span> = child_thread.join();
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">result</span> = join_handle.join();
 </pre>
 </div>
-<p>
-Eficiente para tarefas limitadas pelo processador.
-</p>
 </section>
-<section id="slide-orge59e207">
-<h3 id="orge59e207">Memória compartilhada</h3>
+<section id="slide-orgfbedd24">
+<h3 id="orgfbedd24">Memória compartilhada</h3>
 <p>
 Múltiplas <i>threads</i> acessando os mesmos dados.
 </p>
@@ -288,8 +332,8 @@ interior não sincronizada</b>.
 Rust inibe corrida de dados, mas não todas condições de corrida.
 </p>
 </section>
-<section id="slide-org03152e5">
-<h4 id="org03152e5">Atômicos</h4>
+<section id="slide-orgffa6dcf">
+<h4 id="orgffa6dcf">Atômicos</h4>
 <p>
 Processadores modernos possuem instruções atômicas.
 </p>
@@ -316,13 +360,18 @@ Na biblioteca padrão:
 </section>
 <section>
 <p>
-Operações (<code>AtomicUsize</code>):
+Operações:
 </p>
 <div class="org-src-container">
 
-<pre  class="src src-rust"><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">load</span>(&amp;<span style="color: #223fae;">self</span>, <span style="color: #1c2028;">order</span>: <span style="color: #079992;">Ordering</span>) -&gt; <span style="color: #079992;">usize</span>;
-<span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">store</span>(&amp;<span style="color: #223fae;">self</span>, <span style="color: #1c2028;">val</span>: <span style="color: #079992;">usize</span>, <span style="color: #1c2028;">order</span>: <span style="color: #079992;">Ordering</span>);
-...
+<pre  class="src src-rust"><span style="color: #223fae;">impl</span> <span style="color: #079992;">AtomicUsize</span> {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">load</span>(&amp;<span style="color: #223fae;">self</span>, <span style="color: #1c2028;">order</span>: <span style="color: #079992;">Ordering</span>) -&gt; <span style="color: #079992;">usize</span>;
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">store</span>(&amp;<span style="color: #223fae;">self</span>, <span style="color: #1c2028;">val</span>: <span style="color: #079992;">usize</span>, <span style="color: #1c2028;">order</span>: <span style="color: #079992;">Ordering</span>);
+<span style="color: #D8DEE9;">  </span>...
+}
+
+<span style="color: #223fae;">impl</span> <span style="color: #079992;">Send</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">AtomicUsize</span>;
+<span style="color: #223fae;">impl</span> <span style="color: #079992;">Sync</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">AtomicUsize</span>;
 </pre>
 </div>
 <p>
@@ -340,12 +389,29 @@ Apesar da aparente simplicidade, o modelo de memória é bastante complicado:
 </pre>
 </div>
 </section>
-<section id="slide-orgae5671d">
-<h4 id="orgae5671d">Arc</h4>
+<section id="slide-org6f70973">
+<h4 id="org6f70973">Arc</h4>
 <p>
 <i>Atomically Reference Counted</i> permite <b>posse compartilhada</b>:
-Gerência de posse entre <i>threads</i> independentes.
+Gerência de <b>posse</b> entre <i>threads</i> independentes.
 </p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Arc</span>&lt;<span style="color: #079992;">T</span>&gt; {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">new</span>(<span style="color: #1c2028;">data</span>: <span style="color: #079992;">T</span>) -&gt; <span style="color: #079992;">Arc</span>&lt;<span style="color: #079992;">T</span>&gt;;
+}
+
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Deref</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">Arc</span>&lt;<span style="color: #079992;">T</span>&gt; {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">type</span> <span style="color: #079992;">Target</span> = <span style="color: #079992;">T</span>
+}
+
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Send</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">Arc</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span> + <span style="color: #079992;">Sync</span>;
+
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Sync</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">Arc</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span> + <span style="color: #079992;">Sync</span>;
+</pre>
+</div>
+</section>
+<section>
 <div class="org-src-container">
 
 <pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">std</span>::<span style="color: #223fae;">sync</span>::<span style="color: #079992;">Arc</span>;
@@ -353,7 +419,7 @@ Gerência de posse entre <i>threads</i> independentes.
 <span style="color: #223fae;">let</span> <span style="color: #1c2028;">vec</span> = <span style="color: #079992;">Arc</span>::new(<span style="color: #223fae; font-weight: bold;">vec!</span>[ 1, 2, 3 ]);
 
 <span style="color: #223fae;">let</span> <span style="color: #1c2028;">my_vec</span> = vec.clone();
-<span style="color: #223fae;">let</span> <span style="color: #1c2028;">child_thread</span> = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">join_handle</span> = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
 <span style="color: #D8DEE9;">    </span><span style="color: #223fae;">move</span> || {
 <span style="color: #D8DEE9;">        </span><span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">some work here</span>
 <span style="color: #D8DEE9;">        </span><span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, my_vec[0]);
@@ -364,14 +430,18 @@ Gerência de posse entre <i>threads</i> independentes.
 
 <span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">some work here</span>
 
-<span style="color: #223fae;">let</span> <span style="color: #1c2028;">result</span> = child_thread.join();
+<span style="color: #223fae;">let</span> <span style="color: #1c2028;">result</span> = join_handle.join();
 </pre>
 </div>
 </section>
-<section id="slide-org07b5bbf">
-<h4 id="org07b5bbf">Mutex e RwLock</h4>
+<section id="slide-orgb0cc0a2">
+<h4 id="orgb0cc0a2">Mutex e RwLock</h4>
 <p>
 Primitivas de <b>exclusão mútua</b>, providas pelo sistema operacional.
+</p>
+
+<p>
+Em Rust:
 </p>
 <blockquote>
 <p>
@@ -388,30 +458,30 @@ Mutex
 </p>
 <div class="org-src-container">
 
-<pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">std</span>::<span style="color: #223fae;">sync</span>::{<span style="color: #079992;">Arc</span>, <span style="color: #079992;">Mutex</span>};
+<pre  class="src src-rust"><span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Mutex</span>&lt;<span style="color: #079992;">T</span>&gt; {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">new</span>(<span style="color: #1c2028;">t</span>: <span style="color: #079992;">T</span>) -&gt; <span style="color: #079992;">Mutex</span>&lt;<span style="color: #079992;">T</span>&gt;;
 
-<span style="color: #223fae;">let</span> <span style="color: #1c2028;">mutex</span> = <span style="color: #079992;">Arc</span>::new(<span style="color: #079992;">Mutex</span>::new(0));
-
-<span style="color: #223fae;">let</span> <span style="color: #223fae;">mut</span> <span style="color: #1c2028;">child_threads</span> = <span style="color: #079992;">Vec</span>::new();
-
-<span style="color: #223fae;">for</span> <span style="color: #1c2028;">_</span> <span style="color: #223fae;">in</span> 0..10 {
-<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">mutex</span> = mutex.clone();
-
-<span style="color: #D8DEE9;">    </span><span style="color: #223fae;">let</span> <span style="color: #1c2028;">handle</span> = <span style="color: #223fae;">std</span>::<span style="color: #223fae;">thread</span>::spawn(
-<span style="color: #D8DEE9;">        </span><span style="color: #223fae;">move</span> || {
-<span style="color: #D8DEE9;">            </span><span style="color: #223fae;">let</span> <span style="color: #223fae;">mut</span> <span style="color: #1c2028;">data</span> = mutex.lock().unwrap();
-<span style="color: #D8DEE9;">            </span>*data += 1;
-<span style="color: #D8DEE9;">        </span>}
-<span style="color: #D8DEE9;">    </span>);
-
-<span style="color: #D8DEE9;">    </span>child_threads.push(handle);
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">lock</span>(&amp;<span style="color: #223fae;">self</span>) -&gt; <span style="color: #079992;">LockResult</span>&lt;<span style="color: #079992;">MutexGuard</span>&lt;<span style="color: #079992;">T</span>&gt;&gt;;
 }
 
-<span style="color: #223fae;">for</span> <span style="color: #1c2028;">handle</span> <span style="color: #223fae;">in</span> child_threads {
-<span style="color: #D8DEE9;">    </span>handle.join().unwrap();
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Send</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">Mutex</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span>;
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Sync</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">Mutex</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span>;
+</pre>
+</div>
+<p style="text-align:center">
+RwLock
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-rust"><span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">RwLock</span>&lt;<span style="color: #079992;">T</span>&gt; {
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">new</span>(<span style="color: #1c2028;">t</span>: <span style="color: #079992;">T</span>) -&gt; <span style="color: #079992;">RwLock</span>&lt;<span style="color: #079992;">T</span>&gt;;
+
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">read</span>(&amp;<span style="color: #223fae;">self</span>)  -&gt; <span style="color: #079992;">LockResult</span>&lt;<span style="color: #079992;">RwLockReadGuard</span>&lt;<span style="color: #079992;">T</span>&gt;&gt;;
+<span style="color: #D8DEE9;">  </span><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">write</span>(&amp;<span style="color: #223fae;">self</span>) -&gt; <span style="color: #079992;">LockResult</span>&lt;<span style="color: #079992;">RwLockWriteGuard</span>&lt;<span style="color: #079992;">T</span>&gt;&gt;;
 }
 
-<span style="color: #223fae;">println!</span>(<span style="color: #1c2028; font-weight: bold;">"</span><span style="color: #1c2028; font-weight: bold; font-style: italic;">{}</span><span style="color: #1c2028; font-weight: bold;">"</span>, mutex.lock().unwrap());
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Send</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">RwLock</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span>;
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Sync</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">RwLock</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span> + <span style="color: #079992;">Sync</span>;
 </pre>
 </div>
 </section>
@@ -495,8 +565,8 @@ Mas não é uma corrida de dados.
 </p>
 </div>
 </section>
-<section id="slide-orga3109e0">
-<h3 id="orga3109e0">Passagem de mensagens</h3>
+<section id="slide-orgad38d0c">
+<h3 id="orgad38d0c">Passagem de mensagens</h3>
 <p>
 Canais de comunicação, onde se envia e recebe dados.
 </p>
@@ -504,19 +574,22 @@ Canais de comunicação, onde se envia e recebe dados.
 <p>
 <code>std::sync::mpsc</code>
 </p>
-
-<p>
-O canal abstrai uma fila de mensagens.
-</p>
 <div class="org-src-container">
 
 <pre  class="src src-rust"><span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">channel</span>&lt;<span style="color: #079992;">T</span>&gt;() -&gt; (<span style="color: #079992;">Sender</span>&lt;<span style="color: #079992;">T</span>&gt;, <span style="color: #079992;">Receiver</span>&lt;<span style="color: #079992;">T</span>&gt;);
 
 <span style="color: #223fae;">pub</span> <span style="color: #223fae;">fn</span> <span style="color: #1c2028;">sync_channel</span>&lt;<span style="color: #079992;">T</span>&gt;(<span style="color: #1c2028;">bound</span>: <span style="color: #079992;">usize</span>) -&gt; (<span style="color: #079992;">SyncSender</span>&lt;<span style="color: #079992;">T</span>&gt;, <span style="color: #079992;">Receiver</span>&lt;<span style="color: #079992;">T</span>&gt;)
+
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Send</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">Sender</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span>;
+
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Send</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">SyncSender</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span>;
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Sync</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">SyncSender</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span>;
+
+<span style="color: #223fae;">impl</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #079992;">Send</span> <span style="color: #223fae;">for</span> <span style="color: #079992;">Receiver</span>&lt;<span style="color: #079992;">T</span>&gt; <span style="color: #223fae;">where</span> <span style="color: #1c2028;">T</span>: <span style="color: #079992;">Send</span>;
 </pre>
 </div>
 <p>
-Há <i>crates</i> que implementam variantes mais elaboradas.
+O canal abstrai uma fila de mensagens.
 </p>
 </section>
 <section>
@@ -547,8 +620,8 @@ Tipicamente utilizado para comunicação entre threads:
 O canal abstrai a gerência de posse dos dados.
 </p>
 </section>
-<section id="slide-org812a7db">
-<h3 id="org812a7db"><i>SIMD</i></h3>
+<section id="slide-org1b5f6b1">
+<h3 id="org1b5f6b1"><i>SIMD</i></h3>
 <p>
 Processadores modernos possuem instruções para dados agregados:
 </p>
@@ -616,17 +689,23 @@ Algumas <i>crates</i> ajudam a utilizar <i>SIMD</i> de forma explícita:
 </section>
 </section>
 <section>
-<section id="slide-orgebf8f82">
-<h2 id="orgebf8f82">Abstrações</h2>
+<section id="slide-orga133fc0">
+<h2 id="orga133fc0">Abstrações</h2>
 <dl>
 <dt><a href="https://docs.rs/rayon/1.3.0/rayon/">Rayon</a></dt><dd><p>
 Paralelismo de dados com <i>threads</i>
 </p>
 <div class="org-src-container">
 
-<pre  class="src src-rust"><span style="color: #223fae;">use</span> <span style="color: #223fae;">rayon</span>::<span style="color: #223fae;">prelude</span>::*;
+<pre  class="src src-rust"><span style="color: #223fae;">fn</span> <span style="color: #1c2028;">sum_of_squares</span>(<span style="color: #1c2028;">input</span>: &amp;[<span style="color: #079992;">i32</span>]) -&gt; <span style="color: #079992;">i32</span> {
+<span style="color: #D8DEE9;">  </span>input.iter()
+<span style="color: #D8DEE9;">    </span>.map(|&amp;i| i * i)
+<span style="color: #D8DEE9;">    </span>.sum()
+}
 
-<span style="color: #223fae;">fn</span> <span style="color: #1c2028;">sum_of_squares</span>(<span style="color: #1c2028;">input</span>: &amp;[<span style="color: #079992;">i32</span>]) -&gt; <span style="color: #079992;">i32</span> {
+<span style="color: #223fae;">use</span> <span style="color: #223fae;">rayon</span>::<span style="color: #223fae;">prelude</span>::*;
+
+<span style="color: #223fae;">fn</span> <span style="color: #1c2028;">sum_of_squares_parallel</span>(<span style="color: #1c2028;">input</span>: &amp;[<span style="color: #079992;">i32</span>]) -&gt; <span style="color: #079992;">i32</span> {
 <span style="color: #D8DEE9;">  </span>input.par_iter() <span style="color: #8b94a5;">// </span><span style="color: #8b94a5;">&lt;-- just change that!</span>
 <span style="color: #D8DEE9;">    </span>.map(|&amp;i| i * i)
 <span style="color: #D8DEE9;">    </span>.sum()
@@ -639,14 +718,22 @@ Paralelismo de dados com <i>threads</i>
 <section>
 <dl>
 <dt><a href="https://docs.rs/parallel-stream/2.1.1/parallel_stream/">Parallel stream</a></dt><dd>Paralelismo de dados com <i>async</i></dd>
-<dt><a href="https://docs.rs/crossbeam/0.7.3/crossbeam/">Crossbeam</a></dt><dd>Ferramentas genéricas para programação concorrente</dd>
+<dt><a href="https://docs.rs/crossbeam/0.7.3/crossbeam/">Crossbeam</a></dt><dd>Ferramentas genéricas para programação concorrente:
+<ul>
+<li><code>scope</code>: threads that borrow local variables from the stack.</li>
+<li><code>WaitGroup</code>: synchronizing the begin/end of computations.</li>
+<li><code>AtomicCell</code>: a thread-safe mutable memory location.</li>
+<li><code>ShardedLock</code>: a sharded reader-writer lock.</li>
+<li><code>channel</code>: multi-producer multi-consumer channels.</li>
+
+</ul></dd>
 
 </dl>
 </section>
 </section>
 <section>
-<section id="slide-org7c9ac3b">
-<h2 id="org7c9ac3b">Fim</h2>
+<section id="slide-org1bb0fb1">
+<h2 id="org1bb0fb1">Fim</h2>
 <p style="text-align:center">
 <a href="https://github.com/gahag/concurrent-programming-talk" style="text-align:center">https://github.com/gahag/concurrent-programming-talk</a>
 </p>

@@ -89,6 +89,22 @@
     Para escrever código assíncrono, não precisamos utilizar o método ~poll~, mas é
     importante ter uma noção de como funciona por baixo dos panos.
 *** Async/await
+    A definição de uma função assíncrona se dá da seguinte forma:
+    #+begin_src rust
+      async fn foo() -> i32;
+    #+end_src
+    Que equivalente a:
+    #+begin_src rust
+      fn foo() -> impl Future<Output = i32>;
+    #+end_src
+    Mas nos permite utilizar ~await~ na sua implementação.
+    #+begin_src rust
+      async fn bar() {
+        let value = foo().await;
+        println!("{}", value);
+      }
+    #+end_src
+    #+reveal: split
     #+begin_src rust
       use futures::future;
 
@@ -124,10 +140,21 @@
   - /SIMD/
 ** /Threading/
    Controle de fluxo paralelo no mesmo espaço de endereçamento.
+
+   ~std::thread~
+   #+begin_src rust
+     pub fn spawn<F, T>(f: F) -> JoinHandle<T>
+     where
+         F: FnOnce() -> T,
+         F: Send + 'static,
+         T: Send + 'static,
+   #+end_src
+   Eficiente para tarefas limitadas pelo processador.
+   #+reveal: split
    #+begin_src rust
      static slice: &[u8] = &[ 1, 2, 3 ];
 
-     let child_thread = std::thread::spawn(
+     let join_handle = std::thread::spawn(
          || {
              // some work here
              println!("{}", slice[0]);
@@ -138,9 +165,8 @@
 
      // some work here
 
-     let result = child_thread.join();
+     let result = join_handle.join();
    #+end_src
-   Eficiente para tarefas limitadas pelo processador.
 ** Memória compartilhada
    Múltiplas /threads/ acessando os mesmos dados.
    - Um tipo ~T~ é /Send/ se ele pode ser *enviado* para outra /thread/.
@@ -165,11 +191,16 @@
       + AtomicBool
       + ...
     #+reveal: split
-    Operações (~AtomicUsize~):
+    Operações:
     #+begin_src rust
-      pub fn load(&self, order: Ordering) -> usize;
-      pub fn store(&self, val: usize, order: Ordering);
-      ...
+      impl AtomicUsize {
+        pub fn load(&self, order: Ordering) -> usize;
+        pub fn store(&self, val: usize, order: Ordering);
+        ...
+      }
+
+      impl Send for AtomicUsize;
+      impl Sync for AtomicUsize;
     #+end_src
     Apesar da aparente simplicidade, o modelo de memória é bastante complicado:
     #+begin_src rust
@@ -183,14 +214,28 @@
     #+end_src
 *** Arc
     /Atomically Reference Counted/ permite *posse compartilhada*:
-    Gerência de posse entre /threads/ independentes.
+    Gerência de *posse* entre /threads/ independentes.
+    #+begin_src rust
+      impl<T> Arc<T> {
+        pub fn new(data: T) -> Arc<T>;
+      }
+
+      impl<T> Deref for Arc<T> {
+        type Target = T
+      }
+
+      impl<T> Send for Arc<T> where T: Send + Sync;
+
+      impl<T> Sync for Arc<T> where T: Send + Sync;
+    #+end_src
+    #+reveal: split
     #+begin_src rust
       use std::sync::Arc;
 
       let vec = Arc::new(vec![ 1, 2, 3 ]);
 
       let my_vec = vec.clone();
-      let child_thread = std::thread::spawn(
+      let join_handle = std::thread::spawn(
           move || {
               // some work here
               println!("{}", my_vec[0]);
@@ -201,10 +246,12 @@
 
       // some work here
 
-      let result = child_thread.join();
+      let result = join_handle.join();
     #+end_src
 *** Mutex e RwLock
     Primitivas de *exclusão mútua*, providas pelo sistema operacional.
+
+    Em Rust:
     #+begin_quote
     Lock data, not code.
     #+end_quote
@@ -213,30 +260,27 @@
     #+attr_html: :style text-align:center
     Mutex
     #+begin_src rust
-      use std::sync::{Arc, Mutex};
+      impl<T> Mutex<T> {
+        pub fn new(t: T) -> Mutex<T>;
 
-      let mutex = Arc::new(Mutex::new(0));
-
-      let mut child_threads = Vec::new();
-
-      for _ in 0..10 {
-          let mutex = mutex.clone();
-
-          let handle = std::thread::spawn(
-              move || {
-                  let mut data = mutex.lock().unwrap();
-                  ,*data += 1;
-              }
-          );
-
-          child_threads.push(handle);
+        pub fn lock(&self) -> LockResult<MutexGuard<T>>;
       }
 
-      for handle in child_threads {
-          handle.join().unwrap();
+      impl<T> Send for Mutex<T> where T: Send;
+      impl<T> Sync for Mutex<T> where T: Send;
+    #+end_src
+    #+attr_html: :style text-align:center
+    RwLock
+    #+begin_src rust
+      impl<T> RwLock<T> {
+        pub fn new(t: T) -> RwLock<T>;
+
+        pub fn read(&self)  -> LockResult<RwLockReadGuard<T>>;
+        pub fn write(&self) -> LockResult<RwLockWriteGuard<T>>;
       }
 
-      println!("{}", mutex.lock().unwrap());
+      impl<T> Send for RwLock<T> where T: Send;
+      impl<T> Sync for RwLock<T> where T: Send + Sync;
     #+end_src
     #+reveal: split
     #+attr_html: :style text-align:center
@@ -280,14 +324,19 @@
    Canais de comunicação, onde se envia e recebe dados.
 
    ~std::sync::mpsc~
-
-   O canal abstrai uma fila de mensagens.
    #+begin_src rust
      pub fn channel<T>() -> (Sender<T>, Receiver<T>);
 
      pub fn sync_channel<T>(bound: usize) -> (SyncSender<T>, Receiver<T>)
+
+     impl<T> Send for Sender<T> where T: Send;
+
+     impl<T> Send for SyncSender<T> where T: Send;
+     impl<T> Sync for SyncSender<T> where T: Send;
+
+     impl<T> Send for Receiver<T> where T: Send;
    #+end_src
-   Há /crates/ que implementam variantes mais elaboradas.
+   O canal abstrai uma fila de mensagens.
    #+reveal: split
    Tipicamente utilizado para comunicação entre threads:
    #+begin_src rust
@@ -351,9 +400,15 @@
 * Abstrações
   - [[https://docs.rs/rayon/1.3.0/rayon/][Rayon]] :: Paralelismo de dados com /threads/
     #+begin_src rust
+      fn sum_of_squares(input: &[i32]) -> i32 {
+        input.iter()
+          .map(|&i| i * i)
+          .sum()
+      }
+
       use rayon::prelude::*;
 
-      fn sum_of_squares(input: &[i32]) -> i32 {
+      fn sum_of_squares_parallel(input: &[i32]) -> i32 {
         input.par_iter() // <-- just change that!
           .map(|&i| i * i)
           .sum()
@@ -361,7 +416,12 @@
     #+end_src
   #+reveal: split
   - [[https://docs.rs/parallel-stream/2.1.1/parallel_stream/][Parallel stream]] :: Paralelismo de dados com /async/
-  - [[https://docs.rs/crossbeam/0.7.3/crossbeam/][Crossbeam]] :: Ferramentas genéricas para programação concorrente
+  - [[https://docs.rs/crossbeam/0.7.3/crossbeam/][Crossbeam]] :: Ferramentas genéricas para programação concorrente:
+    + ~scope~: threads that borrow local variables from the stack.
+    + ~WaitGroup~: synchronizing the begin/end of computations.
+    + ~AtomicCell~: a thread-safe mutable memory location.
+    + ~ShardedLock~: a sharded reader-writer lock.
+    + ~channel~: multi-producer multi-consumer channels.
 * Fim
   #+attr_html: :style text-align:center
   [[https://github.com/gahag/concurrent-programming-talk]]
