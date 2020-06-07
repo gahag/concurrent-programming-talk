@@ -1,0 +1,10 @@
+* Concurrency Talk
+  This are the slides for my talk about concurrent programming in Rust.
+
+  They can be visualized via either the PDF or the HTML file.
+** How to make slides like this?
+   The slides were built with [[https://orgmode.org/][org mode]], [[https://gitlab.com/oer/org-re-reveal][org-re-reveal]] and [[https://revealjs.com/][reveal.js]].
+
+   The source code is composed of the =presentation.org= and =custom.css= files.
+
+   #+html: <p align="center"><img src="images/org-mode.png" /></p>
